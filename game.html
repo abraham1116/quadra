@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Quadra — Partie</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/game.css" />
+</head>
+<body>
+  <header class="nav nav-game">
+    <a class="brand" href="index.html" aria-label="Retour accueil">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Quadra</span>
+    </a>
+    <div class="nav-actions">
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Basculer le thème">
+        <span class="theme-icon">🌙</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="game-wrap">
+    <!-- Controls (top) -->
+    <section class="controls">
+      <div class="control-group">
+        <label for="sel-rule">Règle</label>
+        <select id="sel-rule">
+          <option value="squares" selected>Carrés</option>
+          <option value="encircle">Encerclement</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="sel-mode">Adversaire</label>
+        <select id="sel-mode">
+          <option value="local">2 joueurs (local)</option>
+          <option value="ai">Contre l'IA</option>
+          <option value="training">Entraînement</option>
+        </select>
+      </div>
+      <div class="control-group" id="group-difficulty">
+        <label for="sel-difficulty">Difficulté</label>
+        <select id="sel-difficulty">
+          <option value="easy">Facile</option>
+          <option value="medium" selected>Moyen</option>
+          <option value="hard">Difficile</option>
+          <option value="expert">Expert</option>
+        </select>
+      </div>
+      <button class="btn btn-ghost" id="btn-new">Nouvelle partie</button>
+    </section>
+
+    <!-- Scoreboard -->
+    <section class="scoreboard" aria-label="Tableau des scores">
+      <div class="score score-p1" id="score-p1">
+        <span class="score-dot"></span>
+        <span class="score-name" id="name-p1">Joueur 1</span>
+        <span class="score-val" id="val-p1">0</span>
+      </div>
+      <div class="turn-indicator" id="turn-indicator">Au tour du Joueur 1</div>
+      <div class="score score-p2" id="score-p2">
+        <span class="score-dot"></span>
+        <span class="score-name" id="name-p2">Joueur 2</span>
+        <span class="score-val" id="val-p2">0</span>
+      </div>
+    </section>
+
+    <!-- Board -->
+    <section class="board-stage">
+      <canvas id="board-canvas" width="600" height="600" aria-label="Plateau de jeu"></canvas>
+      <div class="board-overlay" id="board-overlay" hidden>
+        <div class="overlay-card">
+          <h2 id="overlay-title">Partie terminée</h2>
+          <p id="overlay-msg"></p>
+          <div class="overlay-actions">
+            <button class="btn btn-primary" id="btn-rematch">Rejouer</button>
+            <a class="btn btn-ghost" href="index.html">Accueil</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/board.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>

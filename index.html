@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Quadra — jeu de stratégie minimaliste. Capturez des carrés en plaçant des points. Jouable instantanément dans le navigateur." />
+  <title>Quadra — Jeu de stratégie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="index.html" aria-label="Quadra accueil">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Quadra</span>
+    </a>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Basculer le thème">
+      <span class="theme-icon">🌙</span>
+    </button>
+  </header>
+
+  <main class="landing">
+    <section class="hero">
+      <div class="hero-copy">
+        <h1 class="hero-title">Capturez la grille.</h1>
+        <p class="hero-sub">
+          Posez vos points, fermez les carrés, dominez le plateau.
+          Un jeu de stratégie minimaliste — aucune installation, aucun compte.
+          Partie lancée en moins de cinq secondes.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary btn-lg" href="game.html?mode=ai">Play Now</a>
+          <a class="btn btn-ghost btn-lg" href="game.html?mode=local">2 joueurs local</a>
+        </div>
+      </div>
+
+      <div class="hero-preview" aria-hidden="true">
+        <canvas id="preview-canvas" width="320" height="320"></canvas>
+        <div class="preview-caption" id="preview-caption">Mode Carrés</div>
+      </div>
+    </section>
+
+    <section class="rules" id="rules">
+      <h2 class="section-title">Comment jouer</h2>
+      <p class="section-lead">
+        À tour de rôle, chaque joueur pose un point sur une intersection libre
+        de la grille 15×15. Un point posé reste à vous pour toute la partie.
+        La partie s'arrête quand toutes les intersections sont occupées —
+        celui qui a le meilleur score l'emporte.
+      </p>
+      <div class="rules-grid">
+        <article class="rule-card">
+          <div class="rule-num">1</div>
+          <h3>Posez un point</h3>
+          <p>Cliquez une intersection libre. Tour par tour, sans chronomètre.</p>
+        </article>
+        <article class="rule-card">
+          <div class="rule-num">2</div>
+          <h3>Prenez le terrain</h3>
+          <p>Selon le mode : fermez des carrés ou encerclez les points adverses.</p>
+        </article>
+        <article class="rule-card">
+          <div class="rule-num">3</div>
+          <h3>Dominez le score</h3>
+          <p>Chaque capture vaut 1 point. Le plus de captures à la fin gagne.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="modes" id="modes">
+      <h2 class="section-title">Deux façons de jouer</h2>
+      <div class="modes-grid">
+        <article class="mode-card">
+          <div class="mode-tag tag-sq">Carrés</div>
+          <h3>Fermez les carrés</h3>
+          <p>
+            Contrôlez les quatre coins d'un petit carré (1×1) pour le capturer
+            instantanément. Il se remplit de votre couleur. Un jeu de placement
+            et de blocage : chaque coin que vous posez menace un carré… et en
+            défend un autre.
+          </p>
+          <a class="btn btn-ghost" href="game.html?mode=ai&rule=squares">Jouer aux carrés</a>
+        </article>
+        <article class="mode-card">
+          <div class="mode-tag tag-enc">Encerclement</div>
+          <h3>Encerclez l'adversaire</h3>
+          <p>
+            Privez un groupe adverse de toutes ses libertés (les cases vides
+            autour de lui ; le bord du plateau compte comme un mur) et capturez-le
+            <strong>en entier d'un seul coup</strong>. Tendez des pièges, retournez
+            plusieurs points simultanément, raflez le plus de points possible.
+          </p>
+          <a class="btn btn-ghost" href="game.html?mode=ai&rule=encircle">Jouer l'encerclement</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <h2 class="section-title">Pensé pour jouer tout de suite</h2>
+      <div class="feat-grid">
+        <div class="feat"><span class="feat-ico">🧠</span><h4>IA coriace</h4><p>Quatre niveaux — Facile à Expert — tous joués pour gagner. L'Expert anticipe plusieurs coups.</p></div>
+        <div class="feat"><span class="feat-ico">👥</span><h4>2 joueurs local</h4><p>Affrontez un ami sur le même écran, à tour de rôle.</p></div>
+        <div class="feat"><span class="feat-ico">🎯</span><h4>Mode entraînement</h4><p>Testez vos stratégies librement, sans score officiel.</p></div>
+        <div class="feat"><span class="feat-ico">⚡</span><h4>Zéro friction</h4><p>Aucun téléchargement, aucun compte. Une partie en moins de cinq secondes.</p></div>
+        <div class="feat"><span class="feat-ico">📱</span><h4>Tout écran</h4><p>Ordinateur, tablette, smartphone. Interface tactile et responsive.</p></div>
+        <div class="feat"><span class="feat-ico">🌗</span><h4>Clair / sombre</h4><p>Thème élégant qui s'adapte à votre œil et à l'heure.</p></div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <h2 class="section-title">Prêt à jouer&nbsp;?</h2>
+      <div class="hero-actions" style="justify-content:center">
+        <a class="btn btn-primary btn-lg" href="game.html?mode=ai&rule=squares">Play Now</a>
+        <a class="btn btn-ghost btn-lg" href="game.html?mode=local&rule=encircle">2 joueurs · Encerclement</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Quadra — MVP · 100% navigateur</p>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
