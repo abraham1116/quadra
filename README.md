@@ -15,6 +15,20 @@ python3 -m http.server 8000
 # puis http://localhost:8000
 ```
 
+## Jouer hors-ligne — fichier unique (double-clic)
+
+`Quadra.html` contient **tout le jeu dans un seul fichier** (CSS + JS inlinés),
+sans serveur ni Internet. Double-cliquez-le, ou utilisez un lanceur :
+
+- **Windows** : double-clic sur `Quadra.bat`
+- **macOS / Linux** : double-clic sur `Quadra.command`
+
+Régénérer `Quadra.html` après modification des sources :
+
+```bash
+node build-standalone.js
+```
+
 ## Règles (2 modes)
 
 - **Carrés** — contrôlez les 4 coins d'un carré 1×1 pour le capturer.

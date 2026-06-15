@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Quadra — Jouer</title>
+  <style>
+/* ===== Quadra — base styles & theme ===== */
+:root {
+  --bg: #f5f6f8;
+  --bg-elev: #ffffff;
+  --text: #1a1d24;
+  --text-soft: #5b6270;
+  --border: #e2e5ea;
+  --grid-line: #d3d8e0;
+  --accent: #4f46e5;
+  --accent-soft: #eef0fe;
+  --p1: #4f46e5;
+  --p1-fill: rgba(79, 70, 229, 0.16);
+  --p2: #f43f5e;
+  --p2-fill: rgba(244, 63, 94, 0.16);
+  --shadow: 0 8px 30px rgba(20, 24, 40, 0.08);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+[data-theme="dark"] {
+  --bg: #0e1016;
+  --bg-elev: #171a22;
+  --text: #eef0f5;
+  --text-soft: #9aa1b1;
+  --border: #262a35;
+  --grid-line: #2c313d;
+  --accent: #7c74ff;
+  --accent-soft: #1c1f33;
+  --p1: #8b84ff;
+  --p1-fill: rgba(139, 132, 255, 0.20);
+  --p2: #ff6a82;
+  --p2-fill: rgba(255, 106, 130, 0.20);
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.55;
+  min-height: 100vh;
+  transition: background 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ===== Nav ===== */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px clamp(16px, 5vw, 48px);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem; }
+.brand-mark {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--p1), var(--p2));
+  box-shadow: var(--shadow);
+}
+.brand-name { letter-spacing: -0.02em; }
+
+.theme-toggle {
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.05rem;
+  display: grid; place-items: center;
+  transition: transform 0.15s ease, border-color 0.2s ease;
+}
+.theme-toggle:hover { transform: translateY(-1px); border-color: var(--accent); }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 11px 20px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
+}
+.btn:active { transform: translateY(1px) scale(0.99); }
+.btn-lg { padding: 15px 30px; font-size: 1.05rem; border-radius: var(--radius); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 6px 18px -6px var(--accent);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -8px var(--accent); }
+
+.btn-ghost {
+  background: var(--bg-elev);
+  color: var(--text);
+  border-color: var(--border);
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ===== Form controls ===== */
+select {
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%23888' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ===== Footer ===== */
+.footer {
+  text-align: center;
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  padding: 40px 16px;
+}
+
+.section-title {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  letter-spacing: -0.02em;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+/* ===== Game screen ===== */
+.nav-game { border-bottom: 1px solid var(--border); max-width: 100%; }
+.nav-actions { display: flex; align-items: center; gap: 12px; }
+
+.game-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 18px clamp(12px, 4vw, 28px) 40px;
+  display: grid;
+  gap: 20px;
+}
+
+/* ===== Scoreboard ===== */
+.scoreboard {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+.score {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.score-p2 { flex-direction: row-reverse; }
+.score-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.score-p1 .score-dot { background: var(--p1); }
+.score-p2 .score-dot { background: var(--p2); }
+.score-name { font-weight: 600; font-size: 0.92rem; flex: 1; }
+.score-p2 .score-name { text-align: right; }
+.score-val { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+
+.score.active { box-shadow: 0 0 0 2px var(--accent); }
+.score-p1.active { border-color: var(--p1); box-shadow: 0 0 0 2px var(--p1); }
+.score-p2.active { border-color: var(--p2); box-shadow: 0 0 0 2px var(--p2); }
+
+.turn-indicator {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-soft);
+  text-align: center;
+  min-width: 110px;
+  padding: 0 6px;
+}
+
+/* ===== Board ===== */
+.board-stage {
+  position: relative;
+  aspect-ratio: 1;
+  width: 100%;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+#board-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: manipulation;
+  cursor: crosshair;
+}
+
+.board-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+.board-overlay[hidden] { display: none; }
+.overlay-card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 30px 32px;
+  text-align: center;
+  max-width: 320px;
+  animation: pop 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+}
+.overlay-card h2 { font-size: 1.5rem; margin-bottom: 8px; letter-spacing: -0.02em; }
+.overlay-card p { color: var(--text-soft); margin-bottom: 20px; }
+.overlay-actions { display: flex; gap: 12px; justify-content: center; }
+
+/* ===== Controls ===== */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+}
+.control-group { display: grid; gap: 6px; }
+.control-group label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+#btn-new { margin-left: auto; align-self: stretch; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+@media (max-width: 540px) {
+  .score-name { display: none; }
+  .turn-indicator { font-size: 0.74rem; min-width: 90px; }
+  .controls { gap: 10px; }
+  .control-group { flex: 1; }
+  .control-group select { width: 100%; }
+  #btn-new { margin-left: 0; flex-basis: 100%; }
+}
+
+</style>
+</head>
+<body>
+  <header class="nav nav-game">
+    <a class="brand" href="#" onclick="return false" aria-label="Retour accueil">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Quadra</span>
+    </a>
+    <div class="nav-actions">
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Basculer le thème">
+        <span class="theme-icon">🌙</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="game-wrap">
+    <!-- Controls (top) -->
+    <section class="controls">
+      <div class="control-group">
+        <label for="sel-rule">Règle</label>
+        <select id="sel-rule">
+          <option value="squares" selected>Carrés</option>
+          <option value="encircle">Encerclement</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="sel-mode">Adversaire</label>
+        <select id="sel-mode">
+          <option value="local">2 joueurs (local)</option>
+          <option value="ai">Contre l'IA</option>
+          <option value="training">Entraînement</option>
+        </select>
+      </div>
+      <div class="control-group" id="group-difficulty">
+        <label for="sel-difficulty">Difficulté</label>
+        <select id="sel-difficulty">
+          <option value="easy">Facile</option>
+          <option value="medium" selected>Moyen</option>
+          <option value="hard">Difficile</option>
+          <option value="expert">Expert</option>
+        </select>
+      </div>
+      <button class="btn btn-ghost" id="btn-new">Nouvelle partie</button>
+    </section>
+
+    <!-- Scoreboard -->
+    <section class="scoreboard" aria-label="Tableau des scores">
+      <div class="score score-p1" id="score-p1">
+        <span class="score-dot"></span>
+        <span class="score-name" id="name-p1">Joueur 1</span>
+        <span class="score-val" id="val-p1">0</span>
+      </div>
+      <div class="turn-indicator" id="turn-indicator">Au tour du Joueur 1</div>
+      <div class="score score-p2" id="score-p2">
+        <span class="score-dot"></span>
+        <span class="score-name" id="name-p2">Joueur 2</span>
+        <span class="score-val" id="val-p2">0</span>
+      </div>
+    </section>
+
+    <!-- Board -->
+    <section class="board-stage">
+      <canvas id="board-canvas" width="600" height="600" aria-label="Plateau de jeu"></canvas>
+      <div class="board-overlay" id="board-overlay" hidden>
+        <div class="overlay-card">
+          <h2 id="overlay-title">Partie terminée</h2>
+          <p id="overlay-msg"></p>
+          <div class="overlay-actions">
+            <button class="btn btn-primary" id="btn-rematch">Rejouer</button>
+            <a class="btn btn-ghost" href="#" onclick="return false">Accueil</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+/* ===== board.js — pure game state & geometry (no DOM) =====
+ * Two rulesets share the same grid:
+ *   "squares"  — capture a 1×1 square by owning its 4 corners.
+ *   "encircle" — capture an opponent point when every on-board orthogonal
+ *                neighbour is yours (board edge counts as a wall). The point
+ *                flips to your colour. Captures chain. */
+
+const GRID_SIZE = 15;             // intersections per side
+const CELL_COUNT = GRID_SIZE - 1; // 14×14 capturable squares
+
+function otherPlayer(p) { return p === 1 ? 2 : 1; }
+
+class Board {
+  constructor(ruleset = "squares") {
+    this.ruleset = ruleset;
+    this.reset();
+  }
+
+  setRuleset(r) { this.ruleset = r; this.reset(); }
+
+  reset() {
+    this.grid = Array.from({ length: GRID_SIZE }, () =>
+      new Array(GRID_SIZE).fill(0));
+    this.cells = Array.from({ length: CELL_COUNT }, () =>
+      new Array(CELL_COUNT).fill(0));
+    this.scores = { 1: 0, 2: 0 };
+    this.filled = 0;
+  }
+
+  inBounds(r, c) {
+    return r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE;
+  }
+
+  isEmpty(r, c) {
+    return this.inBounds(r, c) && this.grid[r][c] === 0;
+  }
+
+  /** Place a point. Returns list of captured items (shape depends on ruleset). */
+  place(r, c, player) {
+    if (!this.isEmpty(r, c)) return [];
+    this.grid[r][c] = player;
+    this.filled++;
+    return this.ruleset === "squares"
+      ? this._captureSquares(r, c, player)
+      : this._captureEncircle(r, c, player);
+  }
+
+  /** Revert a placement together with the captures it produced. */
+  undo(r, c, captured) {
+    this.grid[r][c] = 0;
+    this.filled--;
+    if (this.ruleset === "squares") {
+      for (const sq of captured) {
+        this.cells[sq.r][sq.c] = 0;
+        this.scores[sq.player]--;
+      }
+    } else {
+      for (const f of captured) {
+        this.grid[f.r][f.c] = f.from;   // restore previous owner
+        this.scores[f.player]--;
+      }
+    }
+  }
+
+  /* ---------- squares ruleset ---------- */
+  _captureSquares(r, c, player) {
+    const out = [];
+    const cand = [[r, c], [r - 1, c], [r, c - 1], [r - 1, c - 1]];
+    for (const [sr, sc] of cand) {
+      if (sr < 0 || sc < 0 || sr >= CELL_COUNT || sc >= CELL_COUNT) continue;
+      if (this.cells[sr][sc] !== 0) continue;
+      if (this._squareOwnedBy(sr, sc, player)) {
+        this.cells[sr][sc] = player;
+        this.scores[player]++;
+        out.push({ r: sr, c: sc, player });
+      }
+    }
+    return out;
+  }
+
+  _squareOwnedBy(sr, sc, player) {
+    return (
+      this.grid[sr][sc] === player &&
+      this.grid[sr][sc + 1] === player &&
+      this.grid[sr + 1][sc] === player &&
+      this.grid[sr + 1][sc + 1] === player
+    );
+  }
+
+  _squareGain(r, c, player) {
+    let n = 0;
+    const cand = [[r, c], [r - 1, c], [r, c - 1], [r - 1, c - 1]];
+    for (const [sr, sc] of cand) {
+      if (sr < 0 || sc < 0 || sr >= CELL_COUNT || sc >= CELL_COUNT) continue;
+      if (this.cells[sr][sc] !== 0) continue;
+      const corners = [
+        this.grid[sr][sc], this.grid[sr][sc + 1],
+        this.grid[sr + 1][sc], this.grid[sr + 1][sc + 1],
+      ];
+      let mine = 0, foe = 0;
+      for (const v of corners) {
+        if (v === player) mine++; else if (v !== 0) foe++;
+      }
+      if (foe === 0 && mine === 3) n++;
+    }
+    return n;
+  }
+
+  /* ---------- encircle ruleset (Go-style group capture) ----------
+   * Any connected opponent group with no liberty (no empty orthogonal
+   * neighbour; board edge counts as a wall) is captured WHOLE — every point
+   * flips at once. Lets you swallow several points simultaneously. */
+  _captureEncircle(r, c, player) {
+    const foe = otherPlayer(player);
+    const flipped = [];
+    const seen = Array.from({ length: GRID_SIZE }, () =>
+      new Array(GRID_SIZE).fill(false));
+
+    for (let i = 0; i < GRID_SIZE; i++) {
+      for (let j = 0; j < GRID_SIZE; j++) {
+        if (this.grid[i][j] !== foe || seen[i][j]) continue;
+        const group = [];
+        let hasLiberty = false;
+        const stack = [[i, j]];
+        seen[i][j] = true;
+        while (stack.length) {
+          const [a, b] = stack.pop();
+          group.push([a, b]);
+          const nb = [[a - 1, b], [a + 1, b], [a, b - 1], [a, b + 1]];
+          for (const [na, nb2] of nb) {
+            if (!this.inBounds(na, nb2)) continue;   // wall: no liberty
+            const v = this.grid[na][nb2];
+            if (v === 0) { hasLiberty = true; }
+            else if (v === foe && !seen[na][nb2]) {
+              seen[na][nb2] = true;
+              stack.push([na, nb2]);
+            }
+          }
+        }
+        if (!hasLiberty) {
+          for (const [a, b] of group) {
+            this.grid[a][b] = player;
+            this.scores[player]++;
+            flipped.push({ r: a, c: b, from: foe, player });
+          }
+        }
+      }
+    }
+    return flipped;
+  }
+
+  /* ---------- shared queries ---------- */
+
+  /** Captures `player` would gain by playing (r,c). Ruleset-aware, no net mutation. */
+  gain(r, c, player) {
+    if (!this.isEmpty(r, c)) return 0;
+    if (this.ruleset === "squares") return this._squareGain(r, c, player);
+    return this._encircleGain(r, c, player);
+  }
+
+  /** Encircle gain — only foe groups orthogonally adjacent to (r,c) can lose
+   *  their last liberty, so the check stays local (fast for AI search). */
+  _encircleGain(r, c, player) {
+    const foe = otherPlayer(player);
+    this.grid[r][c] = player;               // hypothetically occupy
+    let total = 0;
+    const counted = new Set();
+    const nbs = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]];
+    for (const [nr, nc] of nbs) {
+      if (!this.inBounds(nr, nc) || this.grid[nr][nc] !== foe) continue;
+      const key = nr * GRID_SIZE + nc;
+      if (counted.has(key)) continue;
+      const stack = [[nr, nc]];
+      const groupSeen = new Set([key]);
+      let liberty = false, size = 0;
+      while (stack.length) {
+        const [a, b] = stack.pop();
+        size++;
+        for (const [na, nb] of [[a - 1, b], [a + 1, b], [a, b - 1], [a, b + 1]]) {
+          if (!this.inBounds(na, nb)) continue;
+          const v = this.grid[na][nb];
+          if (v === 0) liberty = true;
+          else if (v === foe) {
+            const k = na * GRID_SIZE + nb;
+            if (!groupSeen.has(k)) { groupSeen.add(k); stack.push([na, nb]); }
+          }
+        }
+      }
+      for (const k of groupSeen) counted.add(k);
+      if (!liberty) total += size;
+    }
+    this.grid[r][c] = 0;                     // restore
+    return total;
+  }
+
+  emptyCells() {
+    const out = [];
+    for (let r = 0; r < GRID_SIZE; r++)
+      for (let c = 0; c < GRID_SIZE; c++)
+        if (this.grid[r][c] === 0) out.push({ r, c });
+    return out;
+  }
+
+  isFull() { return this.filled >= GRID_SIZE * GRID_SIZE; }
+
+  winner() {
+    if (this.scores[1] > this.scores[2]) return 1;
+    if (this.scores[2] > this.scores[1]) return 2;
+    return 0;
+  }
+}
+
+/* ===== ai.js — local AI opponents (ruleset-agnostic) =====
+ * Relies only on Board's generic interface (place/undo/gain/scores), so the
+ * same engine plays both the "squares" and "encircle" rulesets.
+ *
+ *   easy   — greedy capture + block direct threats. Shallow but never passes
+ *            up a free capture; punishes loose play.
+ *   medium — 1-ply safe search: capture, avoid handing a capture back, build.
+ *   hard   — alpha-beta, depth 2.
+ *   expert — alpha-beta, depth 3, wider candidate set.
+ */
+
+const AI = {
+  chooseMove(board, player, difficulty) {
+    const moves = board.emptyCells();
+    if (moves.length === 0) return null;
+    switch (difficulty) {
+      case "easy":   return this._easy(board, player, moves);
+      case "medium": return this._onePly(board, player, moves);
+      case "hard":   return this._minimax(board, player, moves, 2, 8);
+      case "expert": return this._minimax(board, player, moves, 3, 12);
+      default:       return this._onePly(board, player, moves);
+    }
+  },
+
+  _rand(a) { return a[Math.floor(Math.random() * a.length)]; },
+
+  /* ---------- easy: greedy + block ---------- */
+  _easy(board, player, moves) {
+    const foe = otherPlayer(player);
+    const mine = this._bestGain(board, player, moves);
+    if (mine.gain > 0) return this._rand(mine.moves);
+    const theirs = this._bestGain(board, foe, moves);
+    if (theirs.gain > 0) return this._rand(theirs.moves); // deny their capture
+    // otherwise build near the action
+    const near = this._nearActive(board, moves);
+    return this._rand(near.length ? near : moves);
+  },
+
+  /* ---------- medium: 1-ply safe ---------- */
+  _onePly(board, player, moves) {
+    const foe = otherPlayer(player);
+    const mid = (GRID_SIZE - 1) / 2;
+    const pool = this._candidates(board, player, moves, 18);
+    let best = null, bestScore = -Infinity;
+    for (const m of pool) {
+      const cap = board.place(m.r, m.c, player);
+      const myGain = cap.length;
+      const reply = this._maxGain(board, foe);       // opponent's best answer
+      board.undo(m.r, m.c, cap);
+      const dist = Math.abs(m.r - mid) + Math.abs(m.c - mid);
+      const s = myGain * 10 - reply * 11 - dist * 0.06;
+      if (s > bestScore) { bestScore = s; best = m; }
+    }
+    return best || this._rand(moves);
+  },
+
+  /* ---------- hard / expert: alpha-beta ---------- */
+  _minimax(board, player, moves, depth, width) {
+    const pool = this._candidates(board, player, moves, width);
+    let best = null, bestVal = -Infinity;
+    let alpha = -Infinity;
+    for (const m of pool) {
+      const cap = board.place(m.r, m.c, player);
+      const v = this._search(board, otherPlayer(player), player,
+        depth - 1, alpha, Infinity, width);
+      board.undo(m.r, m.c, cap);
+      if (v > bestVal) { bestVal = v; best = m; }
+      if (v > alpha) alpha = v;
+    }
+    return best || this._rand(moves);
+  },
+
+  _search(board, toMove, me, depth, alpha, beta, width) {
+    if (depth <= 0 || board.isFull()) return this._eval(board, me);
+    const moves = board.emptyCells();
+    if (!moves.length) return this._eval(board, me);
+    const pool = this._candidates(board, toMove, moves, width);
+    const maximizing = toMove === me;
+    let val = maximizing ? -Infinity : Infinity;
+    for (const m of pool) {
+      const cap = board.place(m.r, m.c, toMove);
+      const child = this._search(board, otherPlayer(toMove), me,
+        depth - 1, alpha, beta, width);
+      board.undo(m.r, m.c, cap);
+      if (maximizing) {
+        if (child > val) val = child;
+        if (val > alpha) alpha = val;
+      } else {
+        if (child < val) val = child;
+        if (val < beta) beta = val;
+      }
+      if (beta <= alpha) break; // prune
+    }
+    return val;
+  },
+
+  _eval(board, me) {
+    return board.scores[me] - board.scores[otherPlayer(me)];
+  },
+
+  /* ---------- candidate generation ---------- */
+  // Top-K empty moves near the action, ranked by own capture + block value,
+  // with a mild pull toward the centre.
+  _candidates(board, player, moves, K) {
+    const foe = otherPlayer(player);
+    const mid = (GRID_SIZE - 1) / 2;
+    const near = this._nearActive(board, moves);
+    const pool = near.length ? near : moves;
+    if (pool.length <= K) return pool;
+    const scored = pool.map((m) => {
+      const g = board.gain(m.r, m.c, player);
+      const b = board.gain(m.r, m.c, foe);
+      const dist = Math.abs(m.r - mid) + Math.abs(m.c - mid);
+      return { m, s: g * 10 + b * 7 - dist * 0.08 };
+    });
+    scored.sort((a, b) => b.s - a.s);
+    return scored.slice(0, K).map((x) => x.m);
+  },
+
+  _nearActive(board, moves) {
+    const near = moves.filter(({ r, c }) => {
+      for (let dr = -1; dr <= 1; dr++)
+        for (let dc = -1; dc <= 1; dc++) {
+          if (!dr && !dc) continue;
+          const nr = r + dr, nc = c + dc;
+          if (board.inBounds(nr, nc) && board.grid[nr][nc] !== 0) return true;
+        }
+      return false;
+    });
+    return near;
+  },
+
+  /* ---------- gain helpers ---------- */
+  _bestGain(board, player, moves) {
+    let g = 0, list = [];
+    for (const m of moves) {
+      const v = board.gain(m.r, m.c, player);
+      if (v > g) { g = v; list = [m]; }
+      else if (v === g && v > 0) list.push(m);
+    }
+    return { gain: g, moves: list.length ? list : moves };
+  },
+
+  _maxGain(board, player) {
+    let g = 0;
+    const moves = this._nearActive(board, board.emptyCells());
+    const pool = moves.length ? moves : board.emptyCells();
+    for (const m of pool) {
+      const v = board.gain(m.r, m.c, player);
+      if (v > g) g = v;
+    }
+    return g;
+  },
+};
+
+/* ===== animations.js — canvas rendering + animated feedback ===== */
+
+class BoardView {
+  constructor(canvas, board) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.board = board;
+    this.hover = null;          // {r,c} or null
+    this.hoverPlayer = 1;
+    this.pointAnims = new Map(); // "r,c" -> {start, player}
+    this.cellAnims = new Map();  // "r,c" -> {start, player}
+    this.ringAnims = new Map();  // "r,c" -> {start, player}  (encircle close)
+    this._raf = null;
+    this.POINT_MS = 220;
+    this.CELL_MS = 320;
+    this.RING_MS = 520;
+    this.resize();
+  }
+
+  /* --- geometry --- */
+  resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const size = this.canvas.clientWidth || 600;
+    this.canvas.width = size * dpr;
+    this.canvas.height = size * dpr;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.size = size;
+    this.pad = size * 0.04;
+    this.step = (size - this.pad * 2) / (GRID_SIZE - 1);
+    this.dot = Math.max(4, this.step * 0.30);
+    this.draw();
+  }
+
+  px(c) { return this.pad + c * this.step; }
+  py(r) { return this.pad + r * this.step; }
+
+  /** pixel -> nearest intersection within snap radius, else null */
+  toGrid(px, py) {
+    const c = Math.round((px - this.pad) / this.step);
+    const r = Math.round((py - this.pad) / this.step);
+    if (r < 0 || c < 0 || r >= GRID_SIZE || c >= GRID_SIZE) return null;
+    const dx = px - this.px(c), dy = py - this.py(r);
+    if (Math.hypot(dx, dy) > this.step * 0.5) return null;
+    return { r, c };
+  }
+
+  /* --- theme colors (re-read so dark mode works live) --- */
+  colors() {
+    const cs = getComputedStyle(document.body);
+    return {
+      line: cs.getPropertyValue("--grid-line").trim(),
+      p1: cs.getPropertyValue("--p1").trim(),
+      p2: cs.getPropertyValue("--p2").trim(),
+      p1Fill: cs.getPropertyValue("--p1-fill").trim(),
+      p2Fill: cs.getPropertyValue("--p2-fill").trim(),
+      bg: cs.getPropertyValue("--bg-elev").trim(),
+    };
+  }
+
+  pColor(p, col) { return p === 1 ? col.p1 : col.p2; }
+  pFill(p, col)  { return p === 1 ? col.p1Fill : col.p2Fill; }
+
+  /* --- public animation triggers --- */
+  setHover(cell, player) {
+    const changed = JSON.stringify(cell) !== JSON.stringify(this.hover);
+    this.hover = cell;
+    this.hoverPlayer = player;
+    if (changed) this.draw();
+  }
+
+  animatePoint(r, c, player) {
+    this.pointAnims.set(`${r},${c}`, { start: performance.now(), player });
+    this._loop();
+  }
+
+  animateCaptures(squares) {
+    const now = performance.now();
+    for (const s of squares) this.cellAnims.set(`${s.r},${s.c}`, { start: now, player: s.player });
+    this._loop();
+  }
+
+  // Encircle mode: a closing ring drawn around each captured point.
+  animateRings(points) {
+    const now = performance.now();
+    for (const p of points) this.ringAnims.set(`${p.r},${p.c}`, { start: now, player: p.player });
+    this._loop();
+  }
+
+  /* --- render loop --- */
+  _loop() {
+    if (this._raf) return;
+    const tick = () => {
+      const more = this.draw();
+      this._raf = more ? requestAnimationFrame(tick) : null;
+    };
+    this._raf = requestAnimationFrame(tick);
+  }
+
+  draw() {
+    const ctx = this.ctx, col = this.colors();
+    const now = performance.now();
+    let animating = false;
+    ctx.clearRect(0, 0, this.size, this.size);
+
+    // captured cell fills
+    for (let r = 0; r < CELL_COUNT; r++) {
+      for (let c = 0; c < CELL_COUNT; c++) {
+        const owner = this.board.cells[r][c];
+        if (!owner) continue;
+        let a = 1;
+        const anim = this.cellAnims.get(`${r},${c}`);
+        if (anim) {
+          const t = (now - anim.start) / this.CELL_MS;
+          if (t >= 1) this.cellAnims.delete(`${r},${c}`);
+          else { a = this._ease(t); animating = true; }
+        }
+        ctx.globalAlpha = a;
+        ctx.fillStyle = this.pFill(owner, col);
+        ctx.fillRect(this.px(c), this.py(r), this.step, this.step);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // grid lines
+    ctx.strokeStyle = col.line;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i < GRID_SIZE; i++) {
+      const v = Math.round(this.px(i)) + 0.5;
+      ctx.moveTo(v, this.pad); ctx.lineTo(v, this.size - this.pad);
+      ctx.moveTo(this.pad, v); ctx.lineTo(this.size - this.pad, v);
+    }
+    ctx.stroke();
+
+    // hover ghost
+    if (this.hover && this.board.isEmpty(this.hover.r, this.hover.c)) {
+      ctx.globalAlpha = 0.30;
+      ctx.fillStyle = this.pColor(this.hoverPlayer, col);
+      ctx.beginPath();
+      ctx.arc(this.px(this.hover.c), this.py(this.hover.r), this.dot, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // points
+    for (let r = 0; r < GRID_SIZE; r++) {
+      for (let c = 0; c < GRID_SIZE; c++) {
+        const p = this.board.grid[r][c];
+        if (!p) continue;
+        let scale = 1;
+        const anim = this.pointAnims.get(`${r},${c}`);
+        if (anim) {
+          const t = (now - anim.start) / this.POINT_MS;
+          if (t >= 1) this.pointAnims.delete(`${r},${c}`);
+          else { scale = this._overshoot(t); animating = true; }
+        }
+        ctx.fillStyle = this.pColor(p, col);
+        ctx.beginPath();
+        ctx.arc(this.px(c), this.py(r), this.dot * scale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // encircle rings — a circle that sweeps shut around the captured point
+    for (const [key, anim] of this.ringAnims) {
+      const t = (now - anim.start) / this.RING_MS;
+      if (t >= 1) { this.ringAnims.delete(key); continue; }
+      animating = true;
+      const [r, c] = key.split(",").map(Number);
+      const cx = this.px(c), cy = this.py(r);
+      const sweep = Math.min(1, t / 0.55);          // close the loop
+      const alpha = t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4; // then fade
+      const radius = this.step * (0.50 + 0.10 * this._ease(Math.min(1, t / 0.55)));
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, alpha);
+      ctx.strokeStyle = this.pColor(anim.player, col);
+      ctx.lineWidth = Math.max(2, this.step * 0.11);
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      const start = -Math.PI / 2;
+      ctx.arc(cx, cy, radius, start, start + sweep * Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+    return animating;
+  }
+
+  _ease(t) { return 1 - Math.pow(1 - t, 3); }
+  _overshoot(t) {
+    const s = 1.70158;
+    const x = t - 1;
+    return 1 + (s + 1) * x * x * x + s * x * x; // back-ease-out
+  }
+}
+
+/* ===== game.js — turn flow, modes, scoring orchestration ===== */
+
+class Game {
+  /**
+   * @param {object} opts
+   *   canvas, mode ('local'|'ai'|'training'), difficulty,
+   *   onUpdate(state), onEnd(result)
+   */
+  constructor(opts) {
+    this.canvas = opts.canvas;
+    this.mode = opts.mode || "ai";
+    this.difficulty = opts.difficulty || "medium";
+    this.ruleset = opts.ruleset || "squares";
+    this.onUpdate = opts.onUpdate || (() => {});
+    this.onEnd = opts.onEnd || (() => {});
+
+    this.board = new Board(this.ruleset);
+    this.view = new BoardView(this.canvas, this.board);
+    this.current = 1;       // whose turn
+    this.aiPlayer = 2;      // AI controls player 2 in 'ai' mode
+    this.locked = false;    // input lock during AI / animation
+    this.over = false;
+
+    this._bindInput();
+    window.addEventListener("resize", () => this.view.resize());
+    this.update();
+  }
+
+  /* --- config changes (start fresh game) --- */
+  configure({ mode, difficulty, ruleset }) {
+    if (mode !== undefined) this.mode = mode;
+    if (difficulty !== undefined) this.difficulty = difficulty;
+    if (ruleset !== undefined && ruleset !== this.ruleset) {
+      this.ruleset = ruleset;
+      this.board.setRuleset(ruleset);
+    }
+    this.reset();
+  }
+
+  reset() {
+    this.board.reset();
+    this.current = 1;
+    this.locked = false;
+    this.over = false;
+    this.view.pointAnims.clear();
+    this.view.cellAnims.clear();
+    this.view.ringAnims.clear();
+    this.view.setHover(null, this.current);
+    this.view.draw();
+    this.update();
+  }
+
+  /* --- input --- */
+  _bindInput() {
+    const cv = this.canvas;
+    const pos = (e) => {
+      const rect = cv.getBoundingClientRect();
+      const pt = e.touches ? e.touches[0] : e;
+      return { x: pt.clientX - rect.left, y: pt.clientY - rect.top };
+    };
+
+    cv.addEventListener("mousemove", (e) => {
+      if (this.locked || this.over) return;
+      const { x, y } = pos(e);
+      this.view.setHover(this.view.toGrid(x, y), this.current);
+    });
+    cv.addEventListener("mouseleave", () => this.view.setHover(null, this.current));
+
+    cv.addEventListener("click", (e) => {
+      if (this._humanBlocked()) return;
+      const { x, y } = pos(e);
+      const g = this.view.toGrid(x, y);
+      if (g) this.tryMove(g.r, g.c);
+    });
+
+    // touch: tap to place
+    cv.addEventListener("touchstart", (e) => {
+      if (this._humanBlocked()) return;
+      e.preventDefault();
+      const { x, y } = pos(e);
+      const g = this.view.toGrid(x, y);
+      if (g) this.tryMove(g.r, g.c);
+    }, { passive: false });
+  }
+
+  _humanBlocked() {
+    if (this.over || this.locked) return true;
+    if (this.mode === "ai" && this.current === this.aiPlayer) return true;
+    return false;
+  }
+
+  /* --- turn flow --- */
+  tryMove(r, c) {
+    if (!this.board.isEmpty(r, c)) return;
+    const player = this.current;
+    const captured = this.board.place(r, c, player);
+
+    this.view.setHover(null, player);
+    this.view.animatePoint(r, c, player);
+    if (captured.length) {
+      if (this.ruleset === "squares") {
+        this.view.animateCaptures(captured);
+      } else {
+        for (const f of captured) this.view.animatePoint(f.r, f.c, f.player);
+        this.view.animateRings(captured); // show the loop closing
+      }
+    }
+    this.update();
+
+    if (this.board.isFull()) return this._finish();
+
+    // Extra turn? Standard rule: turn always passes. Spec says alternate.
+    this._next();
+  }
+
+  _next() {
+    this.current = this.current === 1 ? 2 : 1;
+    this.update();
+
+    if (this.mode === "ai" && this.current === this.aiPlayer && !this.over) {
+      this.locked = true;
+      // small delay so the AI move feels deliberate
+      setTimeout(() => this._aiMove(), 280);
+    }
+  }
+
+  _aiMove() {
+    const move = AI.chooseMove(this.board, this.aiPlayer, this.difficulty);
+    this.locked = false;
+    if (!move) { if (this.board.isFull()) this._finish(); return; }
+    this.tryMove(move.r, move.c);
+  }
+
+  _finish() {
+    this.over = true;
+    this.locked = true;
+    const w = this.board.winner();
+    this.onEnd({
+      winner: w,
+      scores: { ...this.board.scores },
+      mode: this.mode,
+    });
+  }
+
+  /* --- state out --- */
+  update() {
+    this.onUpdate({
+      current: this.current,
+      scores: { ...this.board.scores },
+      mode: this.mode,
+      over: this.over,
+    });
+  }
+}
+
+/* ===== ui.js — DOM wiring for the game screen ===== */
+
+(function () {
+  /* --- theme (shared behaviour) --- */
+  const THEME_KEY = "quadra-theme";
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    const icon = document.querySelector(".theme-icon");
+    if (icon) icon.textContent = t === "dark" ? "☀️" : "🌙";
+  }
+  function initTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
+    const prefers = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    applyTheme(saved || (prefers ? "dark" : "light"));
+    const btn = document.getElementById("theme-toggle");
+    if (btn) btn.addEventListener("click", () => {
+      const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      localStorage.setItem(THEME_KEY, next);
+      applyTheme(next);
+      if (window._game) window._game.view.draw();
+    });
+  }
+
+  /* --- elements --- */
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    canvas: $("board-canvas"),
+    selRule: $("sel-rule"),
+    selMode: $("sel-mode"),
+    selDiff: $("sel-difficulty"),
+    grpDiff: $("group-difficulty"),
+    btnNew: $("btn-new"),
+    btnRematch: $("btn-rematch"),
+    overlay: $("board-overlay"),
+    overlayTitle: $("overlay-title"),
+    overlayMsg: $("overlay-msg"),
+    scoreP1: $("score-p1"), scoreP2: $("score-p2"),
+    nameP1: $("name-p1"), nameP2: $("name-p2"),
+    valP1: $("val-p1"), valP2: $("val-p2"),
+    turn: $("turn-indicator"),
+  };
+
+  const DIFF_LABEL = { easy: "Facile", medium: "Moyen", hard: "Difficile", expert: "Expert" };
+
+  function names(mode, diff) {
+    if (mode === "ai") return ["Vous", `IA · ${DIFF_LABEL[diff]}`];
+    if (mode === "training") return ["Entraînement", "Libre"];
+    return ["Joueur 1", "Joueur 2"];
+  }
+
+  function refreshLabels(mode, diff) {
+    const [n1, n2] = names(mode, diff);
+    els.nameP1.textContent = n1;
+    els.nameP2.textContent = n2;
+    els.grpDiff.style.display = mode === "ai" ? "" : "none";
+  }
+
+  /* --- callbacks --- */
+  function onUpdate(s) {
+    els.valP1.textContent = s.scores[1];
+    els.valP2.textContent = s.scores[2];
+    els.scoreP1.classList.toggle("active", !s.over && s.current === 1);
+    els.scoreP2.classList.toggle("active", !s.over && s.current === 2);
+    const [n1, n2] = names(s.mode, els.selDiff.value);
+    els.turn.textContent = s.over ? "Partie terminée" : `Au tour de ${s.current === 1 ? n1 : n2}`;
+  }
+
+  function onEnd(res) {
+    const [n1, n2] = names(res.mode, els.selDiff.value);
+    const unit = els.selRule.value === "encircle" ? "points encerclés" : "carrés";
+    let title, msg;
+    if (res.mode === "training") {
+      title = "Entraînement terminé";
+      msg = `${n1}: ${res.scores[1]} · ${n2}: ${res.scores[2]} ${unit}`;
+    } else if (res.winner === 0) {
+      title = "Égalité !";
+      msg = `${res.scores[1]} — ${res.scores[2]} ${unit}. Personne ne l'emporte.`;
+    } else {
+      const wName = res.winner === 1 ? n1 : n2;
+      title = res.mode === "ai" && res.winner === 2 ? "L'IA gagne" : `${wName} gagne !`;
+      msg = `Score final ${res.scores[1]} — ${res.scores[2]} ${unit}.`;
+    }
+    els.overlayTitle.textContent = title;
+    els.overlayMsg.textContent = msg;
+    els.overlay.hidden = false;
+  }
+
+  /* --- boot --- */
+  function boot() {
+    initTheme();
+
+    const params = new URLSearchParams(location.search);
+    const startMode = ["local", "ai", "training"].includes(params.get("mode"))
+      ? params.get("mode") : "local";
+    const startRule = ["squares", "encircle"].includes(params.get("rule"))
+      ? params.get("rule") : "squares";
+    els.selMode.value = startMode;
+    els.selRule.value = startRule;
+
+    refreshLabels(startMode, els.selDiff.value);
+
+    const game = new Game({
+      canvas: els.canvas,
+      mode: startMode,
+      difficulty: els.selDiff.value,
+      ruleset: startRule,
+      onUpdate,
+      onEnd,
+    });
+    window._game = game;
+
+    const restart = () => {
+      els.overlay.hidden = true;
+      refreshLabels(els.selMode.value, els.selDiff.value);
+      game.configure({
+        mode: els.selMode.value,
+        difficulty: els.selDiff.value,
+        ruleset: els.selRule.value,
+      });
+    };
+
+    els.selRule.addEventListener("change", restart);
+    els.selMode.addEventListener("change", restart);
+    els.selDiff.addEventListener("change", restart);
+    els.btnNew.addEventListener("click", restart);
+    els.btnRematch.addEventListener("click", restart);
+  }
+
+  document.addEventListener("DOMContentLoaded", boot);
+})();
+
+</script>
+</body>
+</html>
