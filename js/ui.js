@@ -30,7 +30,12 @@
     selDiff: $("sel-difficulty"),
     grpDiff: $("group-difficulty"),
     btnNew: $("btn-new"),
+    btnUndo: $("btn-undo"),
     btnRematch: $("btn-rematch"),
+    soundToggle: $("sound-toggle"),
+    soundIcon: document.querySelector(".sound-icon"),
+    hint: $("mode-hint"),
+    progress: $("progress-fill"),
     overlay: $("board-overlay"),
     overlayTitle: $("overlay-title"),
     overlayMsg: $("overlay-msg"),
@@ -38,6 +43,11 @@
     nameP1: $("name-p1"), nameP2: $("name-p2"),
     valP1: $("val-p1"), valP2: $("val-p2"),
     turn: $("turn-indicator"),
+  };
+
+  const HINT = {
+    squares: "Mode Carrés — contrôlez les 4 coins d'un petit carré pour le capturer.",
+    encircle: "Mode Encerclement — encerclez un groupe adverse (bord = mur) pour le rafler.",
   };
 
   const DIFF_LABEL = { easy: "Facile", medium: "Moyen", hard: "Difficile", expert: "Expert" };
@@ -63,6 +73,9 @@
     els.scoreP2.classList.toggle("active", !s.over && s.current === 2);
     const [n1, n2] = names(s.mode, els.selDiff.value);
     els.turn.textContent = s.over ? "Partie terminée" : `Au tour de ${s.current === 1 ? n1 : n2}`;
+    if (els.hint) els.hint.textContent = HINT[s.ruleset] || "";
+    if (els.progress && s.total) els.progress.style.width = `${(s.filled / s.total) * 100}%`;
+    if (els.btnUndo) els.btnUndo.disabled = !s.canUndo;
   }
 
   function onEnd(res) {
@@ -85,9 +98,24 @@
     els.overlay.hidden = false;
   }
 
+  /* --- sound --- */
+  function initSound() {
+    if (typeof SFX === "undefined") return;
+    SFX.init();
+    const sync = () => { if (els.soundIcon) els.soundIcon.textContent = SFX.muted ? "🔇" : "🔊"; };
+    sync();
+    // unlock audio on first interaction (browser autoplay policy)
+    const unlock = () => { SFX.init(); if (SFX.ctx && SFX.ctx.state === "suspended") SFX.ctx.resume(); };
+    window.addEventListener("pointerdown", unlock, { once: true });
+    if (els.soundToggle) els.soundToggle.addEventListener("click", () => {
+      SFX.setMuted(!SFX.muted); sync(); unlock();
+    });
+  }
+
   /* --- boot --- */
   function boot() {
     initTheme();
+    initSound();
 
     const params = new URLSearchParams(location.search);
     const startMode = ["local", "ai", "training"].includes(params.get("mode"))
@@ -124,6 +152,7 @@
     els.selDiff.addEventListener("change", restart);
     els.btnNew.addEventListener("click", restart);
     els.btnRematch.addEventListener("click", restart);
+    els.btnUndo.addEventListener("click", () => game.undo());
   }
 
   document.addEventListener("DOMContentLoaded", boot);

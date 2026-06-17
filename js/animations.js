@@ -10,6 +10,7 @@ class BoardView {
     this.pointAnims = new Map(); // "r,c" -> {start, player}
     this.cellAnims = new Map();  // "r,c" -> {start, player}
     this.ringAnims = new Map();  // "r,c" -> {start, player}  (encircle close)
+    this.lastMove = null;        // {r,c} — highlighted as "last played"
     this._raf = null;
     this.POINT_MS = 220;
     this.CELL_MS = 320;
@@ -72,6 +73,8 @@ class BoardView {
     this.pointAnims.set(`${r},${c}`, { start: performance.now(), player });
     this._loop();
   }
+
+  setLastMove(cell) { this.lastMove = cell; this.draw(); }
 
   animateCaptures(squares) {
     const now = performance.now();
@@ -158,6 +161,22 @@ class BoardView {
         ctx.beginPath();
         ctx.arc(this.px(c), this.py(r), this.dot * scale, 0, Math.PI * 2);
         ctx.fill();
+      }
+    }
+
+    // last-move marker — a thin ring around the most recent point
+    if (this.lastMove) {
+      const { r, c } = this.lastMove;
+      const p = this.board.grid[r][c];
+      if (p) {
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.strokeStyle = this.pColor(p, col);
+        ctx.lineWidth = Math.max(1.5, this.step * 0.06);
+        ctx.beginPath();
+        ctx.arc(this.px(c), this.py(r), this.dot + Math.max(2, this.step * 0.16), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
       }
     }
 

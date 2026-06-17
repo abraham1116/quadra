@@ -20,6 +20,7 @@ class Game {
     this.aiPlayer = 2;      // AI controls player 2 in 'ai' mode
     this.locked = false;    // input lock during AI / animation
     this.over = false;
+    this.history = [];      // move stack for undo
 
     this._bindInput();
     window.addEventListener("resize", () => this.view.resize());
@@ -42,9 +43,11 @@ class Game {
     this.current = 1;
     this.locked = false;
     this.over = false;
+    this.history = [];
     this.view.pointAnims.clear();
     this.view.cellAnims.clear();
     this.view.ringAnims.clear();
+    this.view.lastMove = null;
     this.view.setHover(null, this.current);
     this.view.draw();
     this.update();
@@ -94,8 +97,15 @@ class Game {
     if (!this.board.isEmpty(r, c)) return;
     const player = this.current;
     const captured = this.board.place(r, c, player);
+    this.history.push({ r, c, player, captured });
+
+    if (typeof SFX !== "undefined") {
+      SFX.place(player);
+      if (captured.length) SFX.capture(captured.length);
+    }
 
     this.view.setHover(null, player);
+    this.view.lastMove = { r, c };
     this.view.animatePoint(r, c, player);
     if (captured.length) {
       if (this.ruleset === "squares") {
@@ -131,10 +141,37 @@ class Game {
     this.tryMove(move.r, move.c);
   }
 
+  /* --- undo last move (and the AI's reply, in AI mode) --- */
+  undo() {
+    if (this.locked || !this.history.length) return;
+    const pop = () => {
+      const m = this.history.pop();
+      this.board.undo(m.r, m.c, m.captured);
+      this.view.pointAnims.delete(`${m.r},${m.c}`);
+      for (const f of (m.captured || [])) this.view.pointAnims.delete(`${f.r},${f.c}`);
+      this.current = m.player; // that player gets to move again
+    };
+    pop();
+    // in AI mode, also revert the player's own move so they can replay it
+    if (this.mode === "ai" && this.history.length && this.current === this.aiPlayer) pop();
+
+    this.over = false;
+    this.view.ringAnims.clear();
+    this.view.cellAnims.clear();
+    const last = this.history[this.history.length - 1];
+    this.view.lastMove = last ? { r: last.r, c: last.c } : null;
+    this.view.draw();
+    this.update();
+  }
+
   _finish() {
     this.over = true;
     this.locked = true;
     const w = this.board.winner();
+    if (typeof SFX !== "undefined") {
+      if (this.mode === "ai") (w === this.aiPlayer ? SFX.draw : SFX.win).call(SFX);
+      else (w === 0 ? SFX.draw : SFX.win).call(SFX);
+    }
     this.onEnd({
       winner: w,
       scores: { ...this.board.scores },
@@ -148,7 +185,11 @@ class Game {
       current: this.current,
       scores: { ...this.board.scores },
       mode: this.mode,
+      ruleset: this.ruleset,
       over: this.over,
+      filled: this.board.filled,
+      total: GRID_SIZE * GRID_SIZE,
+      canUndo: this.history.length > 0 && !this.locked,
     });
   }
 }

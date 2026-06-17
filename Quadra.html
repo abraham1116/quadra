@@ -104,6 +104,7 @@ a { color: inherit; text-decoration: none; }
   white-space: nowrap;
 }
 .btn:active { transform: translateY(1px) scale(0.99); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
 .btn-lg { padding: 15px 30px; font-size: 1.05rem; border-radius: var(--radius); }
 
 .btn-primary {
@@ -203,6 +204,36 @@ select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   padding: 0 6px;
 }
 
+/* ===== Objective + progress ===== */
+.info-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.mode-hint {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  flex: 1;
+  min-width: 200px;
+}
+.progress {
+  flex: 1;
+  min-width: 120px;
+  height: 6px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress > i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--p1), var(--p2));
+  transition: width 0.3s ease;
+}
+
 /* ===== Board ===== */
 .board-stage {
   position: relative;
@@ -284,6 +315,9 @@ select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
       <span class="brand-name">Quadra</span>
     </a>
     <div class="nav-actions">
+      <button id="sound-toggle" class="theme-toggle" type="button" aria-label="Activer/couper le son">
+        <span class="sound-icon">🔊</span>
+      </button>
       <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Basculer le thème">
         <span class="theme-icon">🌙</span>
       </button>
@@ -317,7 +351,14 @@ select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
           <option value="expert">Expert</option>
         </select>
       </div>
+      <button class="btn btn-ghost" id="btn-undo" disabled>↶ Annuler</button>
       <button class="btn btn-ghost" id="btn-new">Nouvelle partie</button>
+    </section>
+
+    <!-- Objective + progress -->
+    <section class="info-bar">
+      <span class="mode-hint" id="mode-hint"></span>
+      <div class="progress" aria-hidden="true"><i id="progress-fill"></i></div>
     </section>
 
     <!-- Scoreboard -->
@@ -718,6 +759,56 @@ const AI = {
   },
 };
 
+/* ===== sfx.js — effets sonores synthétisés (WebAudio, aucun fichier) ===== */
+
+const SFX = {
+  ctx: null,
+  muted: false,
+  ready: false,
+
+  init() {
+    if (this.ready) return;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) this.ctx = new AC();
+    } catch (e) { /* audio indisponible — silencieux */ }
+    this.muted = localStorage.getItem("quadra-muted") === "1";
+    this.ready = true;
+  },
+
+  setMuted(m) {
+    this.muted = m;
+    localStorage.setItem("quadra-muted", m ? "1" : "0");
+  },
+
+  _blip(freq, dur = 0.08, type = "sine", gain = 0.06, when = 0) {
+    if (this.muted || !this.ctx) return;
+    if (this.ctx.state === "suspended") this.ctx.resume();
+    const t = this.ctx.currentTime + when;
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(gain, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(this.ctx.destination);
+    o.start(t);
+    o.stop(t + dur + 0.02);
+  },
+
+  place(player) { this._blip(player === 1 ? 440 : 392, 0.07, "triangle", 0.05); },
+
+  capture(n) {
+    const base = 520;
+    for (let i = 0; i < Math.min(n, 5); i++)
+      this._blip(base + i * 110, 0.11, "sine", 0.06, i * 0.05);
+  },
+
+  win() { [523, 659, 784, 1047].forEach((f, i) => this._blip(f, 0.16, "sine", 0.07, i * 0.10)); },
+  draw() { [392, 330].forEach((f, i) => this._blip(f, 0.18, "sine", 0.05, i * 0.12)); },
+};
+
 /* ===== animations.js — canvas rendering + animated feedback ===== */
 
 class BoardView {
@@ -730,6 +821,7 @@ class BoardView {
     this.pointAnims = new Map(); // "r,c" -> {start, player}
     this.cellAnims = new Map();  // "r,c" -> {start, player}
     this.ringAnims = new Map();  // "r,c" -> {start, player}  (encircle close)
+    this.lastMove = null;        // {r,c} — highlighted as "last played"
     this._raf = null;
     this.POINT_MS = 220;
     this.CELL_MS = 320;
@@ -792,6 +884,8 @@ class BoardView {
     this.pointAnims.set(`${r},${c}`, { start: performance.now(), player });
     this._loop();
   }
+
+  setLastMove(cell) { this.lastMove = cell; this.draw(); }
 
   animateCaptures(squares) {
     const now = performance.now();
@@ -881,6 +975,22 @@ class BoardView {
       }
     }
 
+    // last-move marker — a thin ring around the most recent point
+    if (this.lastMove) {
+      const { r, c } = this.lastMove;
+      const p = this.board.grid[r][c];
+      if (p) {
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.strokeStyle = this.pColor(p, col);
+        ctx.lineWidth = Math.max(1.5, this.step * 0.06);
+        ctx.beginPath();
+        ctx.arc(this.px(c), this.py(r), this.dot + Math.max(2, this.step * 0.16), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
     // encircle rings — a circle that sweeps shut around the captured point
     for (const [key, anim] of this.ringAnims) {
       const t = (now - anim.start) / this.RING_MS;
@@ -936,6 +1046,7 @@ class Game {
     this.aiPlayer = 2;      // AI controls player 2 in 'ai' mode
     this.locked = false;    // input lock during AI / animation
     this.over = false;
+    this.history = [];      // move stack for undo
 
     this._bindInput();
     window.addEventListener("resize", () => this.view.resize());
@@ -958,9 +1069,11 @@ class Game {
     this.current = 1;
     this.locked = false;
     this.over = false;
+    this.history = [];
     this.view.pointAnims.clear();
     this.view.cellAnims.clear();
     this.view.ringAnims.clear();
+    this.view.lastMove = null;
     this.view.setHover(null, this.current);
     this.view.draw();
     this.update();
@@ -1010,8 +1123,15 @@ class Game {
     if (!this.board.isEmpty(r, c)) return;
     const player = this.current;
     const captured = this.board.place(r, c, player);
+    this.history.push({ r, c, player, captured });
+
+    if (typeof SFX !== "undefined") {
+      SFX.place(player);
+      if (captured.length) SFX.capture(captured.length);
+    }
 
     this.view.setHover(null, player);
+    this.view.lastMove = { r, c };
     this.view.animatePoint(r, c, player);
     if (captured.length) {
       if (this.ruleset === "squares") {
@@ -1047,10 +1167,37 @@ class Game {
     this.tryMove(move.r, move.c);
   }
 
+  /* --- undo last move (and the AI's reply, in AI mode) --- */
+  undo() {
+    if (this.locked || !this.history.length) return;
+    const pop = () => {
+      const m = this.history.pop();
+      this.board.undo(m.r, m.c, m.captured);
+      this.view.pointAnims.delete(`${m.r},${m.c}`);
+      for (const f of (m.captured || [])) this.view.pointAnims.delete(`${f.r},${f.c}`);
+      this.current = m.player; // that player gets to move again
+    };
+    pop();
+    // in AI mode, also revert the player's own move so they can replay it
+    if (this.mode === "ai" && this.history.length && this.current === this.aiPlayer) pop();
+
+    this.over = false;
+    this.view.ringAnims.clear();
+    this.view.cellAnims.clear();
+    const last = this.history[this.history.length - 1];
+    this.view.lastMove = last ? { r: last.r, c: last.c } : null;
+    this.view.draw();
+    this.update();
+  }
+
   _finish() {
     this.over = true;
     this.locked = true;
     const w = this.board.winner();
+    if (typeof SFX !== "undefined") {
+      if (this.mode === "ai") (w === this.aiPlayer ? SFX.draw : SFX.win).call(SFX);
+      else (w === 0 ? SFX.draw : SFX.win).call(SFX);
+    }
     this.onEnd({
       winner: w,
       scores: { ...this.board.scores },
@@ -1064,7 +1211,11 @@ class Game {
       current: this.current,
       scores: { ...this.board.scores },
       mode: this.mode,
+      ruleset: this.ruleset,
       over: this.over,
+      filled: this.board.filled,
+      total: GRID_SIZE * GRID_SIZE,
+      canUndo: this.history.length > 0 && !this.locked,
     });
   }
 }
@@ -1101,7 +1252,12 @@ class Game {
     selDiff: $("sel-difficulty"),
     grpDiff: $("group-difficulty"),
     btnNew: $("btn-new"),
+    btnUndo: $("btn-undo"),
     btnRematch: $("btn-rematch"),
+    soundToggle: $("sound-toggle"),
+    soundIcon: document.querySelector(".sound-icon"),
+    hint: $("mode-hint"),
+    progress: $("progress-fill"),
     overlay: $("board-overlay"),
     overlayTitle: $("overlay-title"),
     overlayMsg: $("overlay-msg"),
@@ -1109,6 +1265,11 @@ class Game {
     nameP1: $("name-p1"), nameP2: $("name-p2"),
     valP1: $("val-p1"), valP2: $("val-p2"),
     turn: $("turn-indicator"),
+  };
+
+  const HINT = {
+    squares: "Mode Carrés — contrôlez les 4 coins d'un petit carré pour le capturer.",
+    encircle: "Mode Encerclement — encerclez un groupe adverse (bord = mur) pour le rafler.",
   };
 
   const DIFF_LABEL = { easy: "Facile", medium: "Moyen", hard: "Difficile", expert: "Expert" };
@@ -1134,6 +1295,9 @@ class Game {
     els.scoreP2.classList.toggle("active", !s.over && s.current === 2);
     const [n1, n2] = names(s.mode, els.selDiff.value);
     els.turn.textContent = s.over ? "Partie terminée" : `Au tour de ${s.current === 1 ? n1 : n2}`;
+    if (els.hint) els.hint.textContent = HINT[s.ruleset] || "";
+    if (els.progress && s.total) els.progress.style.width = `${(s.filled / s.total) * 100}%`;
+    if (els.btnUndo) els.btnUndo.disabled = !s.canUndo;
   }
 
   function onEnd(res) {
@@ -1156,9 +1320,24 @@ class Game {
     els.overlay.hidden = false;
   }
 
+  /* --- sound --- */
+  function initSound() {
+    if (typeof SFX === "undefined") return;
+    SFX.init();
+    const sync = () => { if (els.soundIcon) els.soundIcon.textContent = SFX.muted ? "🔇" : "🔊"; };
+    sync();
+    // unlock audio on first interaction (browser autoplay policy)
+    const unlock = () => { SFX.init(); if (SFX.ctx && SFX.ctx.state === "suspended") SFX.ctx.resume(); };
+    window.addEventListener("pointerdown", unlock, { once: true });
+    if (els.soundToggle) els.soundToggle.addEventListener("click", () => {
+      SFX.setMuted(!SFX.muted); sync(); unlock();
+    });
+  }
+
   /* --- boot --- */
   function boot() {
     initTheme();
+    initSound();
 
     const params = new URLSearchParams(location.search);
     const startMode = ["local", "ai", "training"].includes(params.get("mode"))
@@ -1195,6 +1374,7 @@ class Game {
     els.selDiff.addEventListener("change", restart);
     els.btnNew.addEventListener("click", restart);
     els.btnRematch.addEventListener("click", restart);
+    els.btnUndo.addEventListener("click", () => game.undo());
   }
 
   document.addEventListener("DOMContentLoaded", boot);

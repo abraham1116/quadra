@@ -4,6 +4,12 @@ Jeu de stratégie minimaliste, 100 % navigateur. Posez des points sur une grille
 15×15, fermez les petits carrés en contrôlant leurs quatre coins, marquez le plus
 de carrés pour gagner.
 
+**Porteurs du projet :** ONGUENE ABRAHAM (24P864) · POUABE STEPHANE (24P866)
+
+- 🎮 En ligne : https://quadra-mu.vercel.app
+- 📄 Présentation (PDF) : [docs/Quadra-Presentation.pdf](docs/Quadra-Presentation.pdf)
+- 💾 Exécutable hors-ligne : `Quadra.html` (double-clic)
+
 ## Jouer
 
 Ouvrez `index.html`, cliquez **Play Now**. Aucune installation, aucun compte.
@@ -46,6 +52,23 @@ Dans les deux cas : 1 point par capture, le plus de captures gagne.
 - **Entraînement** — partie libre, sans score officiel.
 
 Le moteur d'IA est agnostique : il joue les deux règles avec la même force.
+
+## Interface
+
+- Score et tour en temps réel, barre de progression de la partie.
+- Indicateur du dernier coup joué, animations (placement, capture, encerclement).
+- Bouton **Annuler** (revient en arrière ; en mode IA annule aussi sa réponse).
+- **Effets sonores** synthétisés (placement, capture, victoire) avec coupure du son.
+- Thème clair / sombre, responsive mobile et desktop.
+
+## Documentation PDF
+
+Le dossier de présentation est dans [docs/Quadra-Presentation.pdf](docs/Quadra-Presentation.pdf).
+Pour le régénérer (dépend de `fpdf2`) :
+
+```bash
+python3 docs/build_pdf.py
+```
 
 ## Stack
 

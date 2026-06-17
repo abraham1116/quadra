@@ -17,7 +17,7 @@ html = html
   .replace("</head>", "  " + styleBlock + "\n</head>");
 
 // 2) inline scripts (in load order) into one <script> block
-const jsFiles = ["js/board.js", "js/ai.js", "js/animations.js", "js/game.js", "js/ui.js"];
+const jsFiles = ["js/board.js", "js/ai.js", "js/sfx.js", "js/animations.js", "js/game.js", "js/ui.js"];
 const scriptBlock =
   "<script>\n" + jsFiles.map(read).join("\n") + "\n<\/script>";
 html = html
